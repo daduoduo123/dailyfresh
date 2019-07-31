@@ -1,0 +1,46 @@
+{% extends 'base_user_center.html' %}
+{% load static %}
+{% block title %}天天生鲜-用户中心{% endblock %}
+
+{% block right_content %}
+    <div class="right_content clearfix">
+        <div class="info_con clearfix">
+            <h3 class="common_title2">基本信息</h3>
+            <ul class="user_info_list">
+                <li><span>用户名：</span>{{ username }}</li>
+                {% if addr %}
+                <li><span>联系方式：</span>{{ addr.phone }}</li>
+                <li><span>联系地址：</span>{{ addr.addr }}</li>
+                {% else %}
+                <li><span>联系方式：</span>请添加</li>
+                <li><span>联系地址：</span>请添加</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <h3 class="common_title2">最近浏览</h3>
+        <div class="has_view_list">
+
+            <ul class="goods_type_list clearfix">
+                {% for goods in goods_li %}
+                <li>
+                    <a href="{% url 'goods:detail' goods.pk %}"><img src="{{ goods.image.url }}"></a>
+                    <h4><a href="">{{ goods.name }}</a></h4>
+                    <div class="operate">
+                        <span class="prize">￥{{ goods.price }}</span>
+                        <span class="unit">{{ goods.price }}/{{ goods.unite }}g</span>
+                        <a href="#" class="add_goods" title="加入购物车"></a>
+                    </div>
+                </li>
+                {% empty %}
+                <bb>暂无浏览</bb>
+                {% endfor %}
+
+            </ul>
+
+        </div>
+    </div>
+{% endblock %}
+
+
+

@@ -1,0 +1,203 @@
+{% extends 'base_detail_list.html' %}
+{% load static %}
+{% block title %}天天生鲜-商品详情{% endblock %}
+
+{% block main_content %}
+    <div class="breadcrumb">
+        <a href="#">全部分类</a>
+        <span>></span>
+        <a href="#">{{ sku.type.name }}</a>
+        <span>></span>
+        <a href="#">商品详情</a>
+    </div>
+
+    <div class="goods_detail_con clearfix">
+        <div class="goods_detail_pic fl"><img src="{{ sku.image.url }}"></div>
+
+        <div class="goods_detail_list fr">
+            <h3>{{ sku.goods_spu.name }}</h3>
+            <p>{{ sku.desc }}</p>
+            <div class="prize_bar">
+                <span class="show_pirze">¥<em>{{ sku.price }}</em></span>
+                <span class="show_unit">单  位：{{ sku.unite }}</span>
+            </div>
+            <div class="goods_num clearfix">
+                <div class="num_name fl">数 量：</div>
+                <div class="num_add fl">
+                    <input type="text" class="num_show fl" value="1">
+                    <a href="javascript:;" class="add fr">+</a>
+                    <a href="javascript:;" class="minus fr">-</a>
+                </div>
+                <div class="fr" style="padding-right: 40%; margin-top: -10px;">
+                    <p>其他规格:</p>
+                    <ul>
+                        {% for sku in same_spu_skus %}
+                            <li class="fr">&nbsp;&nbsp;<a href="{% url 'goods:detail' sku.pk %}">{{ sku.name }}</a>&nbsp;&nbsp;|</li>
+                        {% empty %}
+                            <dd>暂无其他规格</dd>
+                        {% endfor %}
+                    </ul>
+
+                </div>
+            </div>
+
+
+            <div class="total">总价：<em></em></div>
+            <div class="operate_btn">
+                {% csrf_token %}
+                <a href="javascript:;" class="buy_btn">立即购买</a>
+                <a href="javascript:;" sku_id="{{ sku.id }}" class="add_cart" id="add_cart">加入购物车</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main_wrap clearfix">
+        <div class="l_wrap fl clearfix">
+            <div class="new_goods">
+                <h3>新品推荐</h3>
+                <ul>
+                    {% for new_sku in new_skus %}
+                        <li>
+                            <a href="{% url 'goods:detail' new_sku.pk %}"><img src="{{ new_sku.image.url }}"></a>
+                            <h4><a href="{% url 'goods:detail' new_sku.pk %}">{{ new_sku.name }}</a></h4>
+                            <div class="prize">￥{{ new_sku.price }}</div>
+                        </li>
+                    {% empty %}
+                        <dd>暂无新品</dd>
+                    {% endfor %}
+
+                </ul>
+            </div>
+        </div>
+
+        <div class="r_wrap fr clearfix">
+            <ul class="detail_tab clearfix">
+                <li id="tag_detail" class="active">商品介绍</li>
+                <li id="tag_comment">评论</li>
+            </ul>
+
+            <div class="tab_content" id="tab_detail">
+                <dl>
+                    <dt>商品详情：</dt>
+                    <dd>
+                        {{ sku.goods_spu.detail|safe }}
+                    </dd>
+                </dl>
+            </div>
+            <div class="tab_content" id="tab_comment" style="display:none">
+                <dl>
+                    {% for sku_order in sku_orders %}
+                        <dt>评论时间：{{ sku_order.update_time }}&nbsp;&nbsp;{{ sku_order.order.user.username }}</dt>
+                        <dd>
+                            评论内容：{{ sku_order.comment }}
+                        </dd>
+                    {% endfor %}
+                </dl>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block bottom %}
+    <div class="add_jump"></div>
+{% endblock %}
+{% block bottomfiles %}
+    <script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+    <script type="text/javascript">
+        //描述和评论显示
+        $('#tag_detail').click(function () {
+            $('#tag_comment').removeClass('active')
+            $(this).addClass('active')
+            $('#tab_detail').show()
+            $('#tab_comment').hide()
+        })
+        $('#tag_comment').click(function () {
+            $('#tag_detail').removeClass('active')
+            $(this).addClass('active')
+            $('#tab_comment').show()
+            $('#tab_detail').hide()
+        })
+
+        update_goods_amount()
+
+        // 计算商品的总价
+        function update_goods_amount() {
+            // 商品的单价和数量
+            price = $('.show_pirze').children('em').text();
+            count = $('.num_show').val();
+            amount = parseFloat(price) * parseFloat(count);
+            // 设置商品的总价                        保留两位小数
+            $('.total').children('em').text(amount.toFixed(2) + '元');
+        }
+
+        // 增减商品的数量
+        $(".add").click(function () {
+            // 获取原有的数目
+            count = $('.num_show').val();
+            count = parseInt(count) + 1;
+            $('.num_show').val(count)
+            update_goods_amount()
+        });
+        $(".minus").click(function () {
+            // 获取原有的数目
+            count = $('.num_show').val();
+            count = parseInt(count) - 1;
+            if (count < 1) {
+                count = 1
+            }
+            $('.num_show').val(count)
+            update_goods_amount()
+        });
+        // 手动输入商品的数量，blur失去焦点执行的时间
+        $('.num_show').blur(function () {
+            count = $(this).val();
+            // 校验count是否合法
+            if (isNaN(count) || count.trim().length == 0 || parseInt(count) < 1) {
+                count = 1
+            }
+            $(this).val(count);
+            update_goods_amount()
+        });
+
+
+        var $add_x = $('#add_cart').offset().top;
+        var $add_y = $('#add_cart').offset().left;
+
+        var $to_x = $('#show_count').offset().top;
+        var $to_y = $('#show_count').offset().left;
+
+
+        $('#add_cart').click(function () {
+            // 原先购物车的值
+            cart_count =  $('#show_count').text()
+            cart_count = parseInt(cart_count)
+            sku_id = $(this).attr('sku_id'); // 获取自定义属性用attr，原有属性prop
+            count = $('.num_show').val();
+            {#alert(sku_id + ":" +count)#}
+            csrf = $("input[name='csrfmiddlewaretoken']").val();
+            params = {'sku_id': sku_id, 'count': count, 'csrfmiddlewaretoken': csrf};
+            //发起ajax请求 地址：/cart/add 参数sku_id，count
+            $.post('{% url 'cart:add' %}', params, function (data) {
+                if (data.res == 3) {
+                    $(".add_jump").css({'left': $add_y + 80, 'top': $add_x + 10, 'display': 'block'});
+                    $(".add_jump").stop().animate({
+                            'left': $to_y + 7,
+                            'top': $to_x + 7
+                        },
+                        "fast", function () {
+                            $(".add_jump").fadeOut('fast', function () {
+                                $('#show_count').html(cart_count+1);
+                            });
+
+                        });
+                } else {
+                    alert(data.errmsg)
+                }
+            })
+
+
+        })
+    </script>
+{% endblock %}
