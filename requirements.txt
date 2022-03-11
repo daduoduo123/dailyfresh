@@ -22,7 +22,7 @@ jsonfield==2.0.2
 kombu==4.6.3
 mutagen==1.42.0
 pefile==2019.4.18
-Pillow==6.2.0
+Pillow==9.0.1
 pyasn1==0.4.5
 pycrypto==2.6.1
 pycryptodomex==3.7.2
